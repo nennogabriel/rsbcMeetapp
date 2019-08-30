@@ -45,7 +45,7 @@ class MeetupController {
     if (isBefore(meetupHour, new Date())) {
       return res.status(400).json({
         error:
-          'You can not create a meetup in past without an Y (flux capacitor)',
+          'You can not create a meetup in past without an (Y) (flux capacitor)',
       });
     }
 
@@ -57,6 +57,37 @@ class MeetupController {
     });
 
     return res.json(meetup);
+  }
+
+  async update(req, res) {
+    const meetup = await Meetup.findByPk(req.params.id);
+    if (req.userId !== meetup.user_id) {
+      return res
+        .status(400)
+        .json({ error: 'Only the owner of the meetup can change stuff.' });
+    }
+    meetup.update(req.body);
+
+    return res.json(meetup);
+  }
+
+  async delete(req, res) {
+    const meetup = await Meetup.findByPk(req.params.id);
+    if (req.userId !== meetup.user_id) {
+      return res
+        .status(400)
+        .json({ error: 'Only the owner of the meetup can delete.' });
+    }
+
+    if (meetup.past) {
+      return res
+        .status(400)
+        .json({ error: 'can delete past meetups... (Y) have you?' });
+    }
+
+    await meetup.destroy();
+
+    return res.json({ sucess: "I'll (not) be back." });
   }
 }
 

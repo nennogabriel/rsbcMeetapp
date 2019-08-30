@@ -14,12 +14,13 @@ const upload = multer(multerConfig);
 routes.post('/users', UserController.store);
 routes.post('/sessions', SessionController.store);
 
-// YOU SHALL NOT PASS. unless you have a valid token.
-routes.use(authMiddleware);
+routes.use(authMiddleware); // YOU SHALL NOT PASS. unless you have an user valid token.
 routes.put('/users', UserController.update);
 
 routes.get('/meetups', MeetupController.index);
 routes.post('/meetups', MeetupController.store);
+routes.put('/meetups/:id', MeetupController.update);
+routes.delete('/meetups/:id', MeetupController.delete);
 
 routes.post('/files', upload.single('file'), FileController.store);
 export default routes;
