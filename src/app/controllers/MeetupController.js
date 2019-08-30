@@ -1,13 +1,35 @@
-import { startOfHour, parseISO, isBefore } from 'date-fns';
+import {
+  startOfHour,
+  parseISO,
+  isBefore,
+  startOfDay,
+  endOfDay,
+} from 'date-fns';
 import { Op } from 'sequelize';
 import Meetup from '../models/Meetup';
 import User from '../models/User';
 
 class MeetupController {
   async index(req, res) {
-    const where = { [Op.not]: { user_id: req.userId } };
+    const where = {};
     const page = req.query.page || 1;
-    const perPage = 20;
+    const perPage = 10;
+
+    if (req.query.date) {
+      const searchDate = parseISO(req.query.date);
+
+      where.date = {
+        [Op.between]: [startOfDay(searchDate), endOfDay(searchDate)],
+      };
+    }
+
+    if (req.query.only) {
+      if (req.query.only === 'mine') {
+        where.user_id = req.userId;
+      } else {
+        where.user_id = { [Op.not]: req.userId };
+      }
+    }
 
     const meetups = await Meetup.findAll({
       where,
