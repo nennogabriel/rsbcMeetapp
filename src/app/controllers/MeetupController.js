@@ -51,6 +51,8 @@ class MeetupController {
 
     const user_id = req.userId;
 
+    req.body.date = meetupHour;
+
     const meetup = await Meetup.create({
       ...req.body,
       user_id,
