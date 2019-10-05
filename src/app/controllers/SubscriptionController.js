@@ -4,6 +4,7 @@ import User from '../models/User';
 import Subscription from '../models/Subscription';
 import Queue from '../../lib/Queue';
 import SubscriptionMail from '../jobs/SubscriptionMail';
+import File from '../models/File';
 
 class SubscriptionController {
   async index(req, res) {
@@ -16,6 +17,7 @@ class SubscriptionController {
           model: Meetup,
           where: { date: { [Op.gt]: new Date() } },
           attributes: [
+            'id',
             'title',
             'description',
             'location',
@@ -25,10 +27,8 @@ class SubscriptionController {
             'user_id',
           ],
           include: [
-            {
-              model: User,
-              attributes: ['name', 'email'],
-            },
+            { model: User, attributes: ['name', 'email'] },
+            { model: File, attributes: ['name', 'path', 'url'] },
           ],
         },
       ],
@@ -84,6 +84,25 @@ class SubscriptionController {
     });
 
     return res.json(subscription);
+  }
+
+  async delete(req, res) {
+    const subscription = await Subscription.findByPk(req.params.id, {
+      include: [Meetup],
+    });
+    if (!subscription) {
+      return res.status(400).json({ error: 'subscription not found' });
+    }
+
+    if (subscription.Meetup.past) {
+      return res
+        .status(400)
+        .json({ error: 'You can not unsubiscribe to this meetup now. (Y)' });
+    }
+
+    await subscription.destroy();
+
+    return res.json({ sucess: "I'll (not) be back." });
   }
 }
 

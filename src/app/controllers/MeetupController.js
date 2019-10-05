@@ -9,6 +9,8 @@ import { Op } from 'sequelize';
 import * as Yup from 'yup';
 import Meetup from '../models/Meetup';
 import User from '../models/User';
+import File from '../models/File';
+import Subscription from '../models/Subscription';
 
 class MeetupController {
   async index(req, res) {
@@ -34,7 +36,11 @@ class MeetupController {
 
     const meetups = await Meetup.findAll({
       where,
-      include: [{ model: User, attributes: ['name', 'email'] }],
+      include: [
+        { model: User, attributes: ['name', 'email'] },
+        { model: File, attributes: ['name', 'path', 'url'] },
+        { model: Subscription, where: { user_id: req.userId } },
+      ],
       limit: perPage,
       offset: perPage * page - perPage,
     });
@@ -75,6 +81,9 @@ class MeetupController {
 
   async update(req, res) {
     const meetup = await Meetup.findByPk(req.params.id);
+    if (!meetup) {
+      return res.status(404).json({ error: 'Meetup não encontrado.' });
+    }
     if (req.userId !== meetup.user_id) {
       return res
         .status(400)
